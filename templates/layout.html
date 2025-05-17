@@ -15,6 +15,20 @@
         <div class="h-full bg-primary animate-[progress_2s_ease-in-out_infinite]" style="width: 0%"></div>
     </div>
 
+    <!-- 免责声明 Modal -->
+    <dialog id="disclaimer_modal" class="modal modal-bottom sm:modal-middle">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">免责声明</h3>
+            <p class="py-4">本网站为音乐资源平台，所提供的内容（包括但不限于音乐、歌词、封面等）均来源于互联网公开渠道，仅供用户个人学习、研究或欣赏使用，不得用于任何商业用途。我们不对内容的准确性、完整性、合法性或真实性作任何保证。所有内容的版权归原作者或合法权利人所有。</p>
+            <p class="py-2">本网站严格遵守中国的知识产权法律法规，若您认为本网站的内容侵犯了您的合法权益，请及时与我们联系，并提供相关证明材料，我们将在核实后尽快处理。我们承诺在接到通知后，立即采取必要措施，包括但不限于删除相关内容，以维护您的合法权益。</p>
+            <p class="py-2">使用本网站即表示您已阅读并同意本免责声明的所有条款。用户需自行承担因使用本网站而产生的所有风险和责任。</p>
+            <div class="modal-action">
+                <button id="accept_disclaimer_btn" class="btn btn-primary">我已阅读并同意</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form> <!-- 点击背景关闭，但我们主要通过按钮控制 -->
+    </dialog>
+
     <div class="container mx-auto p-4 min-h-screen flex flex-col">
         <header class="mb-6">
             {% block header %}
@@ -119,7 +133,7 @@
 
         <footer class="footer footer-center p-4 bg-base-300 text-base-content mt-10 rounded-box">
             <aside>
-                <p>音乐聚合平台 &copy; 2024 - 由 AI 强力驱动</p>
+                <p>音乐聚合平台 &copy; {{ current_year }} - 由 AI 强力驱动</p>
             </aside>
         </footer>
     </div>
@@ -197,6 +211,43 @@
                 if (button.getAttribute('data-set-theme') === savedTheme) {
                     const actClass = button.getAttribute('data-act-class');
                     if (actClass) button.classList.add(actClass);
+                }
+            });
+        });
+    </script>
+    <script>
+        // 免责声明 Modal 逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const disclaimerModal = document.getElementById('disclaimer_modal');
+            const acceptDisclaimerBtn = document.getElementById('accept_disclaimer_btn');
+            const disclaimerAcceptedKey = 'disclaimerAccepted';
+
+            if (!disclaimerModal || !acceptDisclaimerBtn) {
+                console.error('免责声明相关元素未找到!');
+                return;
+            }
+
+            // 检查是否已经接受过免责声明
+            if (localStorage.getItem(disclaimerAcceptedKey) !== 'true') {
+                // 使用 DaisyUI 的 showModal() 方法
+                if (typeof disclaimerModal.showModal === 'function') {
+                    disclaimerModal.showModal();
+                } else {
+                    // 后备方案，以防 showModal 不可用
+                    disclaimerModal.open = true; 
+                    disclaimerModal.classList.add('modal-open');
+                }
+            }
+
+            acceptDisclaimerBtn.addEventListener('click', function() {
+                localStorage.setItem(disclaimerAcceptedKey, 'true');
+                // 使用 DaisyUI 的 close() 方法
+                if (typeof disclaimerModal.close === 'function') {
+                    disclaimerModal.close();
+                } else {
+                    // 后备方案
+                    disclaimerModal.open = false;
+                    disclaimerModal.classList.remove('modal-open');
                 }
             });
         });
