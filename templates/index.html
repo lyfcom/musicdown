@@ -1,0 +1,66 @@
+{% extends 'layout.html' %}
+
+{% block title %}搜索音乐{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[30vh] bg-base-200 rounded-box mb-8">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <h1 class="text-5xl font-bold">探索音乐</h1>
+            <p class="py-6">输入歌曲名称或艺术家，找到你喜欢的音乐。</p>
+            <form method="POST" action="{{ url_for('search') }}" class="join w-full">
+                <input type="text" name="query" placeholder="例如：周杰伦 青花瓷" class="input input-bordered join-item w-full" value="{{ query if query }}" required>
+                <button type="submit" class="btn btn-primary join-item">搜索</button>
+            </form>
+            
+            {% if session.get('recent_searches') %}
+            <div class="mt-4">
+                <p class="text-sm mb-2">最近搜索:</p>
+                <div class="flex flex-wrap gap-2">
+                    {% for term in session.get('recent_searches', [])[:6] %}
+                    <form method="POST" action="{{ url_for('search') }}">
+                        <input type="hidden" name="query" value="{{ term }}">
+                        <button type="submit" class="btn btn-xs btn-outline">{{ term }}</button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if songs %}
+    <h2 class="text-3xl font-semibold mb-4">搜索结果 <span class="text-sm text-gray-500">({{ songs|length }} 首)</span></h2>
+    <div class="overflow-x-auto">
+        <table class="table table-sm md:table-md w-full">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>歌曲名称</th>
+                    <th>歌手</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for song in songs %}
+                <tr>
+                    <th>{{ loop.index }}</th>
+                    <td>{{ song.title }}</td>
+                    <td>{{ song.singer }}</td>
+                    <td>
+                        <a href="{{ url_for('song_player', query=query, song_api_index=song.index) }}" class="btn btn-sm btn-outline btn-secondary">播放/详情</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% elif search_performed and not songs %}
+    <div class="text-center py-10">
+        <h2 class="text-2xl font-semibold mb-4">未找到结果</h2>
+        <p class="text-gray-600">请尝试使用其他关键词进行搜索。</p>
+    </div>
+{% endif %}
+
+{% endblock %} 

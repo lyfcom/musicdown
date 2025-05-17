@@ -1,0 +1,65 @@
+{% extends 'layout.html' %}
+
+{% block title %}播放历史{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+    <h1 class="text-3xl font-bold mb-4 sm:mb-0">播放历史</h1>
+    {% if history %}
+    <a href="{{ url_for('clear_history') }}" class="btn btn-sm btn-error w-full sm:w-auto" onclick="return confirm('确定要清空播放历史吗？');">
+        清空历史
+    </a>
+    {% endif %}
+</div>
+
+{% if history %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for item in history %}
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <figure>
+                <img src="{{ item.cover if item.cover else url_for('static', filename='images/default_cover.png') }}" 
+                     alt="{{ item.title }}" class="h-48 w-full object-cover" />
+            </figure>
+            <div class="card-body">
+                <h2 class="card-title text-lg">{{ item.title }}</h2>
+                <p class="text-sm text-gray-600">{{ item.singer }}</p>
+                <p class="text-xs text-gray-500">播放时间: {{ item.played_at }}</p>
+                <div class="card-actions justify-end mt-2">
+                    <a href="{{ url_for('song_player', query=item.query, song_api_index=item.id) }}" 
+                       class="btn btn-sm btn-primary">
+                        再次播放
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info shadow-lg">
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>你还没有播放过任何歌曲。</span>
+        </div>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">开始探索音乐</a>
+    </div>
+{% endif %}
+
+<div class="divider my-8">最近搜索</div>
+
+{% if session.get('recent_searches') %}
+    <div class="flex flex-wrap gap-2">
+        {% for search in session.get('recent_searches', []) %}
+            <form method="POST" action="{{ url_for('search') }}">
+                <input type="hidden" name="query" value="{{ search }}">
+                <button type="submit" class="btn btn-sm btn-outline">{{ search }}</button>
+            </form>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-center text-gray-500">暂无搜索记录</p>
+{% endif %}
+{% endblock %} 

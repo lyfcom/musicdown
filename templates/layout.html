@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="cupcake">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}音乐下载器{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="font-sans">
+    <!-- 全局加载指示器 -->
+    <div id="global-loading" class="fixed top-0 left-0 w-full h-1 bg-primary-content z-50 opacity-0 transition-opacity duration-300">
+        <div class="h-full bg-primary animate-[progress_2s_ease-in-out_infinite]" style="width: 0%"></div>
+    </div>
+
+    <div class="container mx-auto p-4 min-h-screen flex flex-col">
+        <header class="mb-6">
+            {% block header %}
+            <div class="navbar bg-base-200 shadow-lg rounded-box">
+                <div class="navbar-start">
+                    <div class="dropdown">
+                        <label tabindex="0" class="btn btn-ghost lg:hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+                        </label>
+                        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[2] p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a href="{{ url_for('index') }}">首页</a></li>
+                            <li><a href="{{ url_for('play_history') }}">播放历史</a></li>
+                            {% if session.user_id %}
+                            <li><a href="{{ url_for('my_playlists') }}">我的歌单</a></li>
+                            <li><a>当前用户: {{ session.username }}</a></li>
+                            <li><a href="{{ url_for('logout') }}">登出</a></li>
+                            {% else %}
+                            <li><a href="{{ url_for('login') }}">登录/注册</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('index') }}" class="btn btn-ghost text-xl normal-case hidden lg:flex">聚合音乐平台</a>
+                     <a href="{{ url_for('index') }}" class="btn btn-ghost text-lg normal-case lg:hidden">音乐平台</a> {# Shorter title for mobile #}
+                </div>
+                <div class="navbar-center hidden lg:flex">
+                    <ul class="menu menu-horizontal px-1">
+                        <li><a href="{{ url_for('play_history') }}">播放历史</a></li>
+                        {% if session.user_id %}
+                        <li><a href="{{ url_for('my_playlists') }}">我的歌单</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="navbar-end">
+                    <!-- Theme toggle and User Avatar/Login Button -->
+                    <div class="dropdown dropdown-end mr-2">
+                        <label tabindex="0" class="btn btn-ghost btn-circle" title="主题切换">
+                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /></svg>
+                        </label>
+                        <div tabindex="0" class="mt-3 z-[2] card card-compact dropdown-content w-52 bg-base-100 shadow">
+                            <div class="card-body">
+                                <span class="font-bold text-lg">选择主题</span>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button class="btn btn-xs" data-set-theme="light" data-act-class="btn-active">浅色</button>
+                                    <button class="btn btn-xs" data-set-theme="dark" data-act-class="btn-active">暗黑</button>
+                                    <button class="btn btn-xs" data-set-theme="cupcake" data-act-class="btn-active">默认</button>
+                                    <button class="btn btn-xs" data-set-theme="synthwave" data-act-class="btn-active">赛博</button>
+                                    <button class="btn btn-xs" data-set-theme="retro" data-act-class="btn-active">复古</button>
+                                    <button class="btn btn-xs" data-set-theme="valentine" data-act-class="btn-active">粉红</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if session.user_id %}
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-ghost btn-circle avatar" title="{{ session.username }}">
+                            <div class="w-8 rounded-full ring ring-primary ring-offset-base-100 ring-offset-1">
+                                <span class="text-lg font-bold">{{ session.username[0]|upper if session.username else 'U' }}</span>
+                            </div>
+                        </label>
+                        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[2] p-2 shadow bg-base-100 rounded-box w-52">
+                            <li class="menu-title"><span>{{ session.username }}</span></li> 
+                            <li><a href="{{ url_for('my_playlists') }}">我的歌单</a></li>
+                            <li><a href="{{ url_for('play_history') }}">播放历史</a></li>
+                            <li><a href="{{ url_for('logout') }}">登出</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                        </svg>
+                        登录/注册
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endblock %}
+        </header>
+
+        <main class="flex-grow">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div role="alert" class="alert alert-{{ category if category != 'message' else 'info' }} mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            {% if category == 'error' %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2 2m2-2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            {% elif category == 'warning' %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            {% else %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            {% endif %}
+                        </svg>
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="footer footer-center p-4 bg-base-300 text-base-content mt-10 rounded-box">
+            <aside>
+                <p>音乐聚合平台 &copy; 2024 - 由 AI 强力驱动</p>
+            </aside>
+        </footer>
+    </div>
+    <script>
+        // 加载状态指示器
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingBar = document.getElementById('global-loading');
+            const progressBar = loadingBar.querySelector('div');
+            
+            // 页面加载开始时显示
+            function showLoading() {
+                loadingBar.classList.add('opacity-100');
+                progressBar.style.width = '70%'; // 假进度，让用户感觉更快
+            }
+            
+            // 页面加载完成时隐藏
+            function hideLoading() {
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    loadingBar.classList.remove('opacity-100');
+                    setTimeout(() => {
+                        progressBar.style.width = '0%';
+                    }, 300);
+                }, 500);
+            }
+            
+            // 监听页面链接点击
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (link && link.href && link.href.indexOf('#') === -1 && !link.target && !e.ctrlKey && !e.metaKey) {
+                    showLoading();
+                }
+            });
+            
+            // 监听表单提交
+            document.addEventListener('submit', function(e) {
+                if (e.target.tagName === 'FORM') {
+                    showLoading();
+                }
+            });
+            
+            // 页面加载完成后隐藏
+            window.addEventListener('load', hideLoading);
+            
+            // 如果已经加载完成，立即隐藏
+            if (document.readyState === 'complete') {
+                hideLoading();
+            }
+        });
+    </script>
+    <script>
+        // 主题切换功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从localStorage获取保存的主题
+            const savedTheme = localStorage.getItem('theme') || 'cupcake';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            // 主题切换按钮点击事件
+            const themeButtons = document.querySelectorAll('[data-set-theme]');
+            themeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const theme = this.getAttribute('data-set-theme');
+                    document.documentElement.setAttribute('data-theme', theme);
+                    localStorage.setItem('theme', theme);
+                    
+                    // 添加激活状态样式
+                    const actClass = this.getAttribute('data-act-class');
+                    if (actClass) {
+                        themeButtons.forEach(btn => btn.classList.remove(actClass));
+                        this.classList.add(actClass);
+                    }
+                });
+                
+                // 设置初始激活状态
+                if (button.getAttribute('data-set-theme') === savedTheme) {
+                    const actClass = button.getAttribute('data-act-class');
+                    if (actClass) button.classList.add(actClass);
+                }
+            });
+        });
+    </script>
+    {% block scripts_extra %}{% endblock %}
+</body>
+</html> 

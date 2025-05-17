@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+
+{% block title %}登录/注册{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[60vh] bg-base-200">
+    <div class="hero-content flex-col lg:flex-row-reverse">
+        <div class="text-center lg:text-left lg:pl-10">
+            <h1 class="text-5xl font-bold">登录或注册!</h1>
+            <p class="py-6">只需输入用户名即可开始创建和管理你的专属歌单。如果用户名不存在，系统将为你自动创建新账户。</p>
+        </div>
+        <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+            <form method="POST" action="{{ url_for('login') }}" class="card-body">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">用户名</span>
+                    </label>
+                    <input type="text" name="username" placeholder="例如：MusicLover123" class="input input-bordered" required minlength="3" maxlength="30"/>
+                </div>
+                <div class="form-control mt-6">
+                    <button type="submit" class="btn btn-primary">继续</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
