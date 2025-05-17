@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 import database # 导入我们的数据库模块
 from functools import wraps # 导入 wraps
+import time # 新增导入
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24) # 用于 flash messages 和 session
@@ -13,6 +14,8 @@ app.secret_key = os.urandom(24) # 用于 flash messages 和 session
 MAX_HISTORY_ITEMS = 10
 # 最近搜索记录最大保存数量
 MAX_RECENT_SEARCHES = 8
+# 旧文件最大保留天数
+MAX_FILE_AGE_DAYS = 7 # 新增常量
 
 # 设置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -28,10 +31,47 @@ TEMP_PATH = os.path.join(APP_STATIC_FOLDER, music_api_handler.TEMP_DIR_NAME)
 os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 os.makedirs(TEMP_PATH, exist_ok=True)
 
-# 初始化数据库 (在应用启动时直接调用)
+# --- 上下文处理器，注入全局变量到模板 ---
+@app.context_processor
+def inject_current_year():
+    return {'current_year': datetime.now().year}
+
+# --- 文件清理函数 ---
+def cleanup_old_files(folder_path, max_age_days):
+    """清理指定文件夹中超过指定天数的旧文件"""
+    if not os.path.isdir(folder_path):
+        app.logger.warning(f"清理目录不存在: {folder_path}")
+        return
+    
+    app.logger.info(f"开始清理目录: {folder_path}, 清理 {max_age_days} 天前的旧文件")
+    count_deleted = 0
+    count_failed = 0
+    max_age_seconds = max_age_days * 24 * 60 * 60
+    current_time = time.time()
+
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                file_mod_time = os.path.getmtime(file_path)
+                if (current_time - file_mod_time) > max_age_seconds:
+                    os.remove(file_path)
+                    app.logger.info(f"已删除旧文件: {file_path}")
+                    count_deleted += 1
+            # 注意: 如果需要递归清理子目录，需要添加 os.walk
+        except Exception as e:
+            app.logger.error(f"删除文件 {file_path} 失败: {e}")
+            count_failed += 1
+    app.logger.info(f"目录 {folder_path} 清理完成。删除了 {count_deleted} 个文件, 失败 {count_failed} 个。")
+
+# 初始化数据库 和 清理旧文件 (在应用启动时直接调用)
 with app.app_context():
     database.init_db()
     app.logger.info("Database initialized directly on app setup.")
+    
+    # 应用启动时清理旧文件
+    cleanup_old_files(DOWNLOAD_PATH, MAX_FILE_AGE_DAYS)
+    cleanup_old_files(TEMP_PATH, MAX_FILE_AGE_DAYS)
 
 # --- User Authentication Helper ---
 def login_required(f):
