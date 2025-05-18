@@ -36,21 +36,21 @@
         <table class="table table-sm md:table-md w-full">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th class="w-12">#</th>
                     <th>歌曲名称</th>
                     <th>歌手</th>
-                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
                 {% for song in songs %}
                 <tr>
                     <th>{{ loop.index }}</th>
-                    <td>{{ song.title }}</td>
-                    <td>{{ song.singer }}</td>
                     <td>
-                        <a href="{{ url_for('song_player', query=query, song_api_index=song.index) }}" class="btn btn-sm btn-outline btn-secondary">播放/详情</a>
+                        <a href="{{ url_for('song_player', query=query, song_api_index=song.index) }}" class="link link-hover link-primary font-semibold">
+                            {{ song.title }}
+                        </a>
                     </td>
+                    <td>{{ song.singer }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

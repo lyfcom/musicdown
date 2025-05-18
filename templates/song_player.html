@@ -43,70 +43,73 @@
                 <!-- 自定义播放器控制 -->
                 <div class="bg-base-200 p-4 rounded-box">
                     <!-- 播放/暂停按钮和当前时间/总时间 -->
-                    <div class="flex items-center mb-2">
-                        {% if prev_song_nav %}
-                        <a href="{{ url_for('song_player', query=prev_song_nav.query, song_api_index=prev_song_nav.song_api_index, source=prev_song_nav.source, playlist_id=(prev_song_nav.playlist_id if prev_song_nav.source=='playlist' else None)) }}" class="btn btn-circle btn-ghost mr-2" title="上一首">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </a>
-                        {% else %}
-                        <button class="btn btn-circle btn-ghost mr-2" title="上一首" disabled>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        {% endif %}
+                    <div class="flex flex-wrap items-center justify-start gap-x-2 gap-y-3 mb-2">
+                        <!-- Group 1: Nav buttons -->
+                        <div class="flex items-center">
+                            {% if prev_song_nav %}
+                            <a href="{{ url_for('song_player', query=prev_song_nav.query, song_api_index=prev_song_nav.song_api_index, source=prev_song_nav.source, playlist_id=(prev_song_nav.playlist_id if prev_song_nav.source=='playlist' else None)) }}" class="btn btn-circle btn-ghost btn-sm sm:btn-md mr-1" title="上一首">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </a>
+                            {% else %}
+                            <button class="btn btn-circle btn-ghost btn-sm sm:btn-md mr-1" title="上一首" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            {% endif %}
 
-                        <button id="playPauseBtn" class="btn btn-circle btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 play-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 pause-icon hidden" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                            </svg>
-                        </button>
+                            <button id="playPauseBtn" class="btn btn-circle btn-primary btn-sm sm:btn-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 play-icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 pause-icon hidden" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                                </svg>
+                            </button>
 
-                        {% if next_song_nav %}
-                        <a href="{{ url_for('song_player', query=next_song_nav.query, song_api_index=next_song_nav.song_api_index, source=next_song_nav.source, playlist_id=(next_song_nav.playlist_id if next_song_nav.source=='playlist' else None)) }}" class="btn btn-circle btn-ghost ml-2" title="下一首">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </a>
-                        {% else %}
-                        <button class="btn btn-circle btn-ghost ml-2" title="下一首" disabled>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                        {% endif %}
+                            {% if next_song_nav %}
+                            <a href="{{ url_for('song_player', query=next_song_nav.query, song_api_index=next_song_nav.song_api_index, source=next_song_nav.source, playlist_id=(next_song_nav.playlist_id if next_song_nav.source=='playlist' else None)) }}" class="btn btn-circle btn-ghost btn-sm sm:btn-md ml-1" title="下一首">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                            {% else %}
+                            <button class="btn btn-circle btn-ghost btn-sm sm:btn-md ml-1" title="下一首" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            {% endif %}
+                        </div>
                         
-                        <span id="currentTime" class="text-sm ml-3 mr-2">0:00</span>
-                        <span class="text-sm mr-2">/</span>
-                        <span id="duration" class="text-sm">0:00</span>
+                        <!-- Group 2: Time display -->
+                        <div class="flex items-center flex-grow justify-center order-last sm:order-none sm:justify-start">
+                            <span id="currentTime" class="text-xs sm:text-sm">0:00</span>
+                            <span class="text-xs sm:text-sm mx-1">/</span>
+                            <span id="duration" class="text-xs sm:text-sm">0:00</span>
+                        </div>
                         
-                        <!-- 循环播放和音量控制 -->
-                        <div class="ml-auto flex items-center">
-                            <button id="loopBtn" class="btn btn-sm btn-circle btn-ghost mr-3 tooltip tooltip-left" data-tip="点击切换播放模式">
-                                <!-- 普通播放(默认) -->
-                                <svg id="icon-normal" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <!-- Group 3: Loop/Volume -->
+                        <div class="flex items-center ml-auto sm:ml-0 md:ml-auto"> <!-- ml-auto for wide, sm:ml-0 for medium, md:ml-auto to push right on md+ -->
+                            <button id="loopBtn" class="btn btn-xs sm:btn-sm btn-circle btn-ghost mr-1 sm:mr-3 tooltip tooltip-left" data-tip="点击切换播放模式">
+                                <!-- Icons for loop modes -->
+                                <svg id="icon-normal" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M15.5 9.5l-7 5 7-5z" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M15.5 14.5l-7-5 7 5z" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                <!-- 单曲循环 -->
-                                <svg id="icon-repeat-one" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg id="icon-repeat-one" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M17 2v4M3 11v-1a4 4 0 0 1 4-4h14" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M7 22v-4M21 13v1a4 4 0 0 1-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M12 12h-2v4h2v-4z" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                <!-- 列表循环 -->
-                                <svg id="icon-repeat-all" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg id="icon-repeat-all" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M17 2v4M3 11v-1a4 4 0 0 1 4-4h14" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M7 22v-4M21 13v1a4 4 0 0 1-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                <!-- 随机播放 -->
-                                <svg id="icon-shuffle" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg id="icon-shuffle" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M16 3h5v5" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M4 20L21 3" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M21 16v5h-5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -115,14 +118,14 @@
                                 </svg>
                             </button>
                             <div class="dropdown dropdown-left">
-                                <button class="btn btn-sm btn-circle btn-ghost" title="音量">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <button class="btn btn-xs sm:btn-sm btn-circle btn-ghost" title="音量">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M11 5L6 9H2v6h4l5 4V5z" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
                                 </button>
-                                <div class="dropdown-content bg-base-100 rounded-box p-3 shadow w-40">
+                                <div class="dropdown-content bg-base-100 rounded-box p-3 shadow w-32 sm:w-40"> <!-- Smaller width for volume slider on mobile -->
                                     <input id="volumeSlider" type="range" min="0" max="100" value="80" class="range range-primary range-xs">
                                 </div>
                             </div>
@@ -136,8 +139,8 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap space-x-2 mb-6">
-                <a href="{{ url_for('download_song', query=original_query, song_api_index=song_api_index) }}" class="btn btn-primary mb-2 sm:mb-0">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 mb-6">
+                <a href="{{ url_for('download_song', query=original_query, song_api_index=song_api_index) }}" class="btn btn-primary w-full sm:w-auto btn-sm sm:btn-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
@@ -145,8 +148,8 @@
                 </a>
 
                 {% if session.user_id %}
-                <div class="dropdown dropdown-hover mb-2 sm:mb-0">
-                    <label tabindex="0" class="btn btn-secondary">
+                <div class="dropdown dropdown-hover w-full sm:w-auto">
+                    <label tabindex="0" class="btn btn-secondary w-full sm:w-auto btn-sm sm:btn-md">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
@@ -178,7 +181,7 @@
                 </div>
                 {% endif %}
 
-                 <a href="{{ url_for('index') }}" class="btn btn-outline mb-2 sm:mb-0">返回搜索</a>
+                 <a href="{{ url_for('index') }}" class="btn btn-outline w-full sm:w-auto btn-sm sm:btn-md">返回搜索</a>
             </div>
             
             <h3 class="text-2xl font-semibold mb-2">歌词</h3>
@@ -368,26 +371,26 @@
                     loopBtn.classList.remove('btn-ghost');
                     loopBtn.classList.add('btn-primary');
                     audioPlayer.loop = true;
-                    loopBtn.dataset.tip = "单曲循环：重复播放当前歌曲";
+                    loopBtn.dataset.tip = "单曲循环";
                     break;
                 case PLAY_MODE.REPEAT_ALL:
                     iconRepeatAll.classList.remove('hidden');
                     loopBtn.classList.remove('btn-ghost');
                     loopBtn.classList.add('btn-primary');
                     audioPlayer.loop = false; // 列表循环由ended事件处理
-                    loopBtn.dataset.tip = "列表循环：顺序播放全部歌曲";
+                    loopBtn.dataset.tip = "列表循环";
                     break;
                 case PLAY_MODE.SHUFFLE:
                     iconShuffle.classList.remove('hidden');
                     loopBtn.classList.remove('btn-ghost');
                     loopBtn.classList.add('btn-primary');
                     audioPlayer.loop = false; // 随机播放由ended事件处理
-                    loopBtn.dataset.tip = "随机播放：随机顺序播放歌曲";
+                    loopBtn.dataset.tip = "随机播放";
                     break;
                 default: // PLAY_MODE.NORMAL
                     iconNormal.classList.remove('hidden');
                     audioPlayer.loop = false;
-                    loopBtn.dataset.tip = "普通播放：点击切换播放模式";
+                    loopBtn.dataset.tip = "普通播放";
                     break;
             }
             
