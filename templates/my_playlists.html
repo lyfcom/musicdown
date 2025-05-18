@@ -3,46 +3,47 @@
 {% block title %}我的歌单{% endblock %}
 
 {% block content %}
-<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-    <h1 class="text-3xl font-bold mb-4 sm:mb-0">我的歌单</h1>
-    <button class="btn btn-primary w-full sm:w-auto" onclick="new_playlist_modal.showModal()">创建新歌单</button>
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">我的歌单</h1>
+    <button class="btn btn-primary" onclick="create_playlist_modal.showModal()">创建新歌单</button>
 </div>
 
 {% if playlists %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {% for playlist in playlists %}
-        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
-            <div class="card-body">
-                <h2 class="card-title">
-                    <a href="{{ url_for('playlist_detail', playlist_id=playlist.id) }}" class="link link-hover">
-                        {{ playlist.name }}
-                    </a>
-                </h2>
-                <p class="text-sm text-gray-500">创建于: {{ playlist.created_at.split(' ')[0] }}</p>
-                <!-- <p class="text-sm">包含 X 首歌曲</p> --> {# TODO: Add song count #}
-                <div class="card-actions justify-end mt-4">
-                    <a href="{{ url_for('playlist_detail', playlist_id=playlist.id) }}" class="btn btn-sm btn-outline btn-secondary">查看</a>
-                    <button class="btn btn-sm btn-outline btn-error" onclick="confirm_delete_playlist_{{playlist.id}}.showModal()">删除</button>
+            <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <a href="{{ url_for('playlist_detail', playlist_id=playlist.id) }}" class="link link-hover link-primary">
+                            {{ playlist.name }}
+                        </a>
+                    </h2>
+                    {% if playlist.created_at %}
+                    <p class="text-sm text-gray-500">创建于: {{ playlist.created_at.strftime('%Y-%m-%d') }}</p>
+                    {% endif %}
+                    {# <p class="text-sm text-gray-500">歌曲数量: {{ playlist.song_count if playlist.song_count else 0 }}</p> #}
+                    <div class="card-actions justify-end mt-4">
+                        <a href="{{ url_for('playlist_detail', playlist_id=playlist.id) }}" class="btn btn-sm btn-outline btn-secondary">查看详情</a>
+                        <button class="btn btn-sm btn-outline btn-error" onclick="document.getElementById('delete_playlist_modal_{{ playlist.id }}').showModal()">删除</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- 删除确认 Modal -->
-        <dialog id="confirm_delete_playlist_{{playlist.id}}" class="modal">
-            <div class="modal-box">
-                <h3 class="font-bold text-lg">确认删除</h3>
-                <p class="py-4">你确定要删除歌单 "{{ playlist.name }}" 吗？此操作不可撤销。</p>
-                <div class="modal-action">
-                    <form method="dialog">
-                        <button class="btn btn-sm">取消</button>
-                    </form>
-                    <form method="POST" action="{{ url_for('delete_playlist', playlist_id=playlist.id) }}">
-                        <button type="submit" class="btn btn-sm btn-error">确认删除</button>
-                    </form>
+            <!-- Delete Confirmation Modal -->
+            <dialog id="delete_playlist_modal_{{ playlist.id }}" class="modal">
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg">确认删除歌单</h3>
+                    <p class="py-4">你确定要删除歌单 "{{ playlist.name }}" 吗？此操作不可撤销，歌单中的所有歌曲记录也将被删除。</p>
+                    <div class="modal-action">
+                        <form method="dialog">
+                            <button class="btn btn-sm">取消</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('delete_playlist', playlist_id=playlist.id) }}">
+                            <button type="submit" class="btn btn-sm btn-error">确认删除</button>
+                        </form>
+                    </div>
                 </div>
-            </div>
-             <form method="dialog" class="modal-backdrop"><button>close</button></form>
-        </dialog>
+                <form method="dialog" class="modal-backdrop"><button>关闭</button></form>
+            </dialog>
         {% endfor %}
     </div>
 {% else %}
@@ -51,30 +52,30 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
         </svg>
         <h2 class="mt-2 text-xl font-semibold">你还没有创建任何歌单</h2>
-        <p class="mt-1 text-sm text-gray-500">点击上方按钮开始创建你的第一个歌单吧！</p>
+        <p class="mt-1 text-sm text-gray-500">点击右上角的"创建新歌单"开始吧！</p>
     </div>
 {% endif %}
 
-<!-- 创建新歌单 Modal -->
-<dialog id="new_playlist_modal" class="modal">
+<!-- Create Playlist Modal -->
+<dialog id="create_playlist_modal" class="modal">
     <div class="modal-box">
-        <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-        </form>
         <h3 class="font-bold text-lg mb-4">创建新歌单</h3>
         <form method="POST" action="{{ url_for('create_playlist_route') }}">
-            <div class="form-control w-full">
+            <div class="form-control w-full mb-4">
                 <label class="label">
                     <span class="label-text">歌单名称</span>
                 </label>
-                <input type="text" name="playlist_name" placeholder="例如：我的最爱" class="input input-bordered w-full" required minlength="1" maxlength="50" />
+                <input type="text" name="playlist_name" placeholder="例如：我的跑步精选" class="input input-bordered w-full" required maxlength="50" />
             </div>
-            <div class="modal-action mt-6">
-                <button type="submit" class="btn btn-primary">创建</button>
+            <div class="modal-action">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-ghost mr-2" type="button" onclick="create_playlist_modal.close()">取消</button>
+                </form>
+                <button type="submit" class="btn btn-sm btn-primary">创建歌单</button>
             </div>
         </form>
     </div>
-    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    <form method="dialog" class="modal-backdrop"><button>关闭</button></form>
 </dialog>
 
 {% endblock %} 
