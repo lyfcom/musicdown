@@ -175,17 +175,10 @@ def song_player(query, song_api_index):
     
     # 根据来源使用不同的列表查找当前歌曲位置
     song_list = playlist_songs if source == 'playlist' and playlist_songs else search_results
-    
-    app.logger.info(f"[DEBUG] song_player - Source: {source}")
-    app.logger.info(f"[DEBUG] song_player - URL song_api_index (original): {song_api_index}, type: {type(song_api_index)}")
-    app.logger.info(f"[DEBUG] song_player - Song list length: {len(song_list)}")
-    if song_list:
-        app.logger.info(f"[DEBUG] song_player - First item in song_list (sample): {song_list[0]}")
-
+ 
     if song_list:
         try:
             current_url_song_api_index_str = str(song_api_index)
-            app.logger.info(f"[DEBUG] song_player - URL song_api_index (as string for comparison): {current_url_song_api_index_str}")
 
             for i, song in enumerate(song_list):
                 if source == 'playlist':
@@ -197,11 +190,10 @@ def song_player(query, song_api_index):
                 
                 song_item_api_index_str = str(song_item_api_index_original)
                 
-                app.logger.info(f"[DEBUG] song_player - Comparing: List item index {i}, song_item_api_index (original): {song_item_api_index_original}, type: {type(song_item_api_index_original)}, as string: {song_item_api_index_str} WITH {current_url_song_api_index_str}")
 
                 if song_item_api_index_str == current_url_song_api_index_str:
                     current_song_list_index = i
-                    app.logger.info(f"[DEBUG] song_player - Match found at list index: {current_song_list_index}")
+
                     break
             
             if current_song_list_index == -1:
