@@ -208,36 +208,50 @@ def song_player(query, song_api_index):
                     break
 
             if current_song_list_index != -1:
-                if current_song_list_index > 0:
-                    prev_song = song_list[current_song_list_index - 1]
+                # Previous song navigation
+                if len(song_list) > 1: # Only enable prev/next if there's more than one song
+                    prev_song_index = (current_song_list_index - 1 + len(song_list)) % len(song_list)
+                    prev_song = song_list[prev_song_index]
                     if source == 'playlist':
                         prev_song_nav = {
                             'query': prev_song['song_query'], 
-                            'song_api_index': str(prev_song['song_api_index']), # Ensure string
+                            'song_api_index': str(prev_song['song_api_index']),
                             'source': source,
                             'playlist_id': playlist_id
                         }
                     else: # source == 'search'
                         prev_song_nav = {
-                            'query': original_query_from_url, # Use the main query for search results nav
-                            'song_api_index': str(prev_song.get('index')), # Ensure string
+                            'query': original_query_from_url, 
+                            'song_api_index': str(prev_song.get('index')),
                             'source': source,
                             'playlist_id': None
                         }
-                
-                if current_song_list_index < len(song_list) - 1:
-                    next_song = song_list[current_song_list_index + 1]
+                elif len(song_list) == 1 and get_current_play_mode_from_frontend_or_default() != 'normal': # Single song, enable nav if looping
+                    # For a single song, prev/next just points to itself if looping is active
+                    # The actual looping is handled by frontend player's 'loop' attribute or 'ended' event logic for REPEAT_ONE
+                    # This just enables the buttons visually if a loop mode is set.
+                    # We'll need a helper to get play mode, or assume any non-normal mode means loop for UI purposes.
+                    # For now, let's assume if only one song, prev/next are disabled by default by not setting them,
+                    # unless we specifically want them to re-trigger the same song via nav.
+                    # Let's keep it simple: prev/next buttons will be active for >1 song, handling wrap-around.
+                    # Single song looping is handled by the player controls (loop icon / single repeat mode).
+                    pass # No prev_song_nav if only one song, even if looping (buttons disabled)
+
+                # Next song navigation
+                if len(song_list) > 1:
+                    next_song_index = (current_song_list_index + 1) % len(song_list)
+                    next_song = song_list[next_song_index]
                     if source == 'playlist':
                         next_song_nav = {
                             'query': next_song['song_query'], 
-                            'song_api_index': str(next_song['song_api_index']), # Ensure string
+                            'song_api_index': str(next_song['song_api_index']),
                             'source': source,
                             'playlist_id': playlist_id
                         }
                     else: # source == 'search'
                         next_song_nav = {
-                            'query': original_query_from_url, # Use the main query for search results nav
-                            'song_api_index': str(next_song.get('index')), # Ensure string
+                            'query': original_query_from_url, 
+                            'song_api_index': str(next_song.get('index')),
                             'source': source,
                             'playlist_id': None
                         }
