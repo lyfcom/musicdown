@@ -175,29 +175,37 @@ def song_player(query, song_api_index):
     
     # 根据来源使用不同的列表查找当前歌曲位置
     song_list = playlist_songs if source == 'playlist' and playlist_songs else search_results
- 
+
     if song_list:
         try:
             current_url_song_api_index_str = str(song_api_index)
+            # original_query_from_url 也需要用于匹配
+            original_query_from_url = query 
 
-            for i, song in enumerate(song_list):
+            for i, song_item in enumerate(song_list): # Renamed song to song_item for clarity
+                match_found = False
                 if source == 'playlist':
-                    # sqlite3.Row objects are accessed by index/key
-                    song_item_api_index_original = song['song_api_index'] 
-                else:
-                    # search_results are expected to be dicts and support .get()
-                    song_item_api_index_original = song.get('index')
-                
-                song_item_api_index_str = str(song_item_api_index_original)
-                
+                    song_item_api_index_original = song_item['song_api_index']
+                    song_item_query_original = song_item['song_query']
+                    song_item_api_index_str = str(song_item_api_index_original)
+                    
+                    if song_item_api_index_str == current_url_song_api_index_str and song_item_query_original == original_query_from_url:
+                        match_found = True
+                else: # source == 'search'
+                    # For search results, the 'query' for all items is original_query_from_url.
+                    # So we only need to match the index.
+                    song_item_api_index_original = song_item.get('index')
+                    song_item_api_index_str = str(song_item_api_index_original)
 
-                if song_item_api_index_str == current_url_song_api_index_str:
+                    if song_item_api_index_str == current_url_song_api_index_str:
+                        # For search results, original_query_from_url IS the query for all items in search_results
+                        # No need to compare song_item_query_original == original_query_from_url here
+                        # as song_item does not store its own query for search results.
+                        match_found = True
+                
+                if match_found:
                     current_song_list_index = i
-
                     break
-            
-            if current_song_list_index == -1:
-                app.logger.warning("[DEBUG] song_player - No match found for current song in the list!")
 
             if current_song_list_index != -1:
                 if current_song_list_index > 0:
@@ -205,14 +213,14 @@ def song_player(query, song_api_index):
                     if source == 'playlist':
                         prev_song_nav = {
                             'query': prev_song['song_query'], 
-                            'song_api_index': prev_song['song_api_index'],
+                            'song_api_index': str(prev_song['song_api_index']), # Ensure string
                             'source': source,
                             'playlist_id': playlist_id
                         }
                     else: # source == 'search'
                         prev_song_nav = {
-                            'query': query, 
-                            'song_api_index': prev_song.get('index'),
+                            'query': original_query_from_url, # Use the main query for search results nav
+                            'song_api_index': str(prev_song.get('index')), # Ensure string
                             'source': source,
                             'playlist_id': None
                         }
@@ -222,14 +230,14 @@ def song_player(query, song_api_index):
                     if source == 'playlist':
                         next_song_nav = {
                             'query': next_song['song_query'], 
-                            'song_api_index': next_song['song_api_index'],
+                            'song_api_index': str(next_song['song_api_index']), # Ensure string
                             'source': source,
                             'playlist_id': playlist_id
                         }
                     else: # source == 'search'
                         next_song_nav = {
-                            'query': query, 
-                            'song_api_index': next_song.get('index'),
+                            'query': original_query_from_url, # Use the main query for search results nav
+                            'song_api_index': str(next_song.get('index')), # Ensure string
                             'source': source,
                             'playlist_id': None
                         }
