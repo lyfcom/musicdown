@@ -44,7 +44,21 @@
                 <div class="bg-base-200 p-4 rounded-box">
                     <!-- 播放/暂停按钮和当前时间/总时间 -->
                     <div class="flex items-center mb-2">
-                        <button id="playPauseBtn" class="btn btn-circle btn-primary mr-3">
+                        {% if prev_song_nav %}
+                        <a href="{{ url_for('song_player', query=prev_song_nav.query, song_api_index=prev_song_nav.song_api_index, source=prev_song_nav.source, playlist_id=(prev_song_nav.playlist_id if prev_song_nav.source=='playlist' else None)) }}" class="btn btn-circle btn-ghost mr-2" title="上一首">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </a>
+                        {% else %}
+                        <button class="btn btn-circle btn-ghost mr-2" title="上一首" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        {% endif %}
+
+                        <button id="playPauseBtn" class="btn btn-circle btn-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 play-icon" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M8 5v14l11-7z" />
                             </svg>
@@ -52,16 +66,52 @@
                                 <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                             </svg>
                         </button>
-                        <span id="currentTime" class="text-sm mr-2">0:00</span>
+
+                        {% if next_song_nav %}
+                        <a href="{{ url_for('song_player', query=next_song_nav.query, song_api_index=next_song_nav.song_api_index, source=next_song_nav.source, playlist_id=(next_song_nav.playlist_id if next_song_nav.source=='playlist' else None)) }}" class="btn btn-circle btn-ghost ml-2" title="下一首">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                        {% else %}
+                        <button class="btn btn-circle btn-ghost ml-2" title="下一首" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                        {% endif %}
+                        
+                        <span id="currentTime" class="text-sm ml-3 mr-2">0:00</span>
                         <span class="text-sm mr-2">/</span>
                         <span id="duration" class="text-sm">0:00</span>
                         
                         <!-- 循环播放和音量控制 -->
                         <div class="ml-auto flex items-center">
-                            <button id="loopBtn" class="btn btn-sm btn-circle btn-ghost mr-3" title="循环播放">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M17 2v2M12 2v2M7 2v2M3 7h18M19 11v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-8" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 17l-2-2 2-2M14 13l2 2-2 2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <button id="loopBtn" class="btn btn-sm btn-circle btn-ghost mr-3 tooltip tooltip-left" data-tip="点击切换播放模式">
+                                <!-- 普通播放(默认) -->
+                                <svg id="icon-normal" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M15.5 9.5l-7 5 7-5z" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M15.5 14.5l-7-5 7 5z" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <!-- 单曲循环 -->
+                                <svg id="icon-repeat-one" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 2v4M3 11v-1a4 4 0 0 1 4-4h14" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M7 22v-4M21 13v1a4 4 0 0 1-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 12h-2v4h2v-4z" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <!-- 列表循环 -->
+                                <svg id="icon-repeat-all" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 2v4M3 11v-1a4 4 0 0 1 4-4h14" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M7 22v-4M21 13v1a4 4 0 0 1-4 4H3" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <!-- 随机播放 -->
+                                <svg id="icon-shuffle" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M16 3h5v5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M4 20L21 3" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M21 16v5h-5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M15 15l6 6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M4 4l5 5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </button>
                             <div class="dropdown dropdown-left">
@@ -148,20 +198,43 @@
                 <!-- 播放列表 -->
                 <div class="mt-4 lg:mt-0 lg:w-1/3">
                     <div class="bg-base-200 rounded-box p-4 h-full">
-                        <h4 class="font-semibold mb-3">搜索结果</h4>
+                        <h4 class="font-semibold mb-3">
+                            {% if source == 'playlist' and playlist %}
+                                歌单：{{ playlist.name }}
+                            {% else %}
+                                搜索结果
+                            {% endif %}
+                        </h4>
                         
-                        {% if search_results %}
+                        {% if source == 'playlist' and playlist_songs %}
                         <div class="overflow-y-auto max-h-96 in-player-playlist">
                             <ul class="menu w-full p-0">
-                                {% for song in search_results %}
-                                <li{% if song.index == song_api_index %} class="bordered"{% endif %}>
-                                    <a href="{{ url_for('song_player', query=original_query, song_api_index=song.index) }}" class="py-2">
-                                        {% if song.index == song_api_index %}
+                                {% for song_item in playlist_songs %}
+                                <li{% if song_item.song_query == original_query and song_item.song_api_index == song_api_index %} class="bordered"{% endif %}>
+                                    <a href="{{ url_for('song_player', query=song_item.song_query, song_api_index=song_item.song_api_index, source='playlist', playlist_id=playlist_id) }}" class="py-2">
+                                        {% if song_item.song_query == original_query and song_item.song_api_index == song_api_index %}
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
                                         </svg>
                                         {% endif %}
-                                        <span class="text-sm">{{ song.title }} - {{ song.singer }}</span>
+                                        <span class="text-sm">{{ song_item.title }} - {{ song_item.singer }}</span>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% elif search_results %}
+                        <div class="overflow-y-auto max-h-96 in-player-playlist">
+                            <ul class="menu w-full p-0">
+                                {% for song_item in search_results %}
+                                <li{% if song_item.index == song_api_index %} class="bordered"{% endif %}>
+                                    <a href="{{ url_for('song_player', query=original_query, song_api_index=song_item.index, source='search') }}" class="py-2">
+                                        {% if song_item.index == song_api_index %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                                        </svg>
+                                        {% endif %}
+                                        <span class="text-sm">{{ song_item.title }} - {{ song_item.singer }}</span>
                                     </a>
                                 </li>
                                 {% endfor %}
@@ -201,9 +274,24 @@
         const volumeSlider = document.getElementById('volumeSlider');
         const loopBtn = document.getElementById('loopBtn');
         
+        // 播放模式相关元素
+        const iconNormal = document.getElementById('icon-normal');
+        const iconRepeatOne = document.getElementById('icon-repeat-one');
+        const iconRepeatAll = document.getElementById('icon-repeat-all');
+        const iconShuffle = document.getElementById('icon-shuffle');
+        
+        // 播放模式常量
+        const PLAY_MODE = {
+            NORMAL: 'normal',     // 普通播放
+            REPEAT_ONE: 'one',    // 单曲循环
+            REPEAT_ALL: 'all',    // 列表循环
+            SHUFFLE: 'shuffle'    // 随机播放
+        };
+        
         // 歌曲ID - 用于本地存储
         const songId = "{{ song_api_index }}";
         const STORAGE_KEY = `music_player_${songId}`;
+        const PLAY_MODE_KEY = 'player_mode';
         
         // 初始化播放器
         function initPlayer() {
@@ -216,13 +304,9 @@
                 audioPlayer.volume = 0.8; // 默认音量80%
             }
             
-            // 设置循环状态
-            let loopEnabled = localStorage.getItem('player_loop') === 'true';
-            audioPlayer.loop = loopEnabled;
-            if (loopEnabled) {
-                loopBtn.classList.add('btn-primary');
-                loopBtn.classList.remove('btn-ghost');
-            }
+            // 设置播放模式
+            let playMode = localStorage.getItem(PLAY_MODE_KEY) || PLAY_MODE.NORMAL;
+            setPlayMode(playMode);
             
             // 恢复播放进度
             const savedData = localStorage.getItem(STORAGE_KEY);
@@ -240,7 +324,105 @@
             // 检测是否可以自动播放
             audioPlayer.addEventListener('canplaythrough', function() {
                 updateDurationDisplay();
-            });
+                
+                // 检查是否应该自动播放（从另一首歌曲自动跳转过来）
+                const shouldAutoPlay = sessionStorage.getItem('autoplay_next') === 'true';
+                if (shouldAutoPlay) {
+                    // 清除标志，避免影响用户手动切换
+                    sessionStorage.removeItem('autoplay_next');
+                    
+                    // 尝试自动播放
+                    const playPromise = audioPlayer.play();
+                    
+                    // 处理自动播放可能被浏览器策略阻止的情况
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            // 自动播放成功，更新UI
+                            playIcon.classList.add('hidden');
+                            pauseIcon.classList.remove('hidden');
+                        }).catch(error => {
+                            // 自动播放被阻止（浏览器策略限制），记录错误但不需要向用户显示
+                            console.log('自动播放被阻止：', error);
+                        });
+                    }
+                }
+            }, { once: true }); // 只需要处理一次canplaythrough事件
+        }
+        
+        // 设置播放模式并更新UI
+        function setPlayMode(mode) {
+            // 隐藏所有图标
+            iconNormal.classList.add('hidden');
+            iconRepeatOne.classList.add('hidden');
+            iconRepeatAll.classList.add('hidden');
+            iconShuffle.classList.add('hidden');
+            
+            // 设置按钮样式
+            loopBtn.classList.remove('btn-primary');
+            loopBtn.classList.add('btn-ghost');
+            
+            // 根据模式显示对应图标和设置循环状态
+            switch(mode) {
+                case PLAY_MODE.REPEAT_ONE:
+                    iconRepeatOne.classList.remove('hidden');
+                    loopBtn.classList.remove('btn-ghost');
+                    loopBtn.classList.add('btn-primary');
+                    audioPlayer.loop = true;
+                    loopBtn.dataset.tip = "单曲循环：重复播放当前歌曲";
+                    break;
+                case PLAY_MODE.REPEAT_ALL:
+                    iconRepeatAll.classList.remove('hidden');
+                    loopBtn.classList.remove('btn-ghost');
+                    loopBtn.classList.add('btn-primary');
+                    audioPlayer.loop = false; // 列表循环由ended事件处理
+                    loopBtn.dataset.tip = "列表循环：顺序播放全部歌曲";
+                    break;
+                case PLAY_MODE.SHUFFLE:
+                    iconShuffle.classList.remove('hidden');
+                    loopBtn.classList.remove('btn-ghost');
+                    loopBtn.classList.add('btn-primary');
+                    audioPlayer.loop = false; // 随机播放由ended事件处理
+                    loopBtn.dataset.tip = "随机播放：随机顺序播放歌曲";
+                    break;
+                default: // PLAY_MODE.NORMAL
+                    iconNormal.classList.remove('hidden');
+                    audioPlayer.loop = false;
+                    loopBtn.dataset.tip = "普通播放：点击切换播放模式";
+                    break;
+            }
+            
+            // 保存当前模式到localStorage
+            localStorage.setItem(PLAY_MODE_KEY, mode);
+        }
+        
+        // 获取当前播放模式
+        function getPlayMode() {
+            return localStorage.getItem(PLAY_MODE_KEY) || PLAY_MODE.NORMAL;
+        }
+        
+        // 循环切换播放模式
+        function cyclePlayMode() {
+            const currentMode = getPlayMode();
+            let newMode;
+            
+            switch(currentMode) {
+                case PLAY_MODE.NORMAL:
+                    newMode = PLAY_MODE.REPEAT_ONE;
+                    break;
+                case PLAY_MODE.REPEAT_ONE:
+                    newMode = PLAY_MODE.REPEAT_ALL;
+                    break;
+                case PLAY_MODE.REPEAT_ALL:
+                    newMode = PLAY_MODE.SHUFFLE;
+                    break;
+                case PLAY_MODE.SHUFFLE:
+                default:
+                    newMode = PLAY_MODE.NORMAL;
+                    break;
+            }
+            
+            setPlayMode(newMode);
+            return newMode;
         }
         
         // 格式化时间显示 (秒 -> mm:ss)
@@ -278,7 +460,6 @@
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             localStorage.setItem('player_volume', audioPlayer.volume.toString());
-            localStorage.setItem('player_loop', audioPlayer.loop.toString());
         }
         
         // 事件监听 - 播放/暂停
@@ -299,7 +480,20 @@
         
         // 事件监听 - 播放结束
         audioPlayer.addEventListener('ended', function() {
-            if (!audioPlayer.loop) {
+            const currentMode = getPlayMode();
+            
+            // 单曲循环已由 audioPlayer.loop = true 处理，不需要在这里处理
+            
+            if (currentMode === PLAY_MODE.REPEAT_ALL) {
+                // 列表循环 - 播放下一首
+                navigateToNextSong(false); // false表示非随机
+            } 
+            else if (currentMode === PLAY_MODE.SHUFFLE) {
+                // 随机播放 - 随机播放一首
+                navigateToNextSong(true); // true表示随机
+            }
+            else {
+                // 正常播放模式 - 播放结束，显示播放按钮
                 pauseIcon.classList.add('hidden');
                 playIcon.classList.remove('hidden');
             }
@@ -320,16 +514,102 @@
         
         // 事件监听 - 循环播放
         loopBtn.addEventListener('click', function() {
-            audioPlayer.loop = !audioPlayer.loop;
-            if (audioPlayer.loop) {
-                this.classList.add('btn-primary');
-                this.classList.remove('btn-ghost');
-            } else {
-                this.classList.remove('btn-primary');
-                this.classList.add('btn-ghost');
-            }
-            savePlayerState();
+            cyclePlayMode();
         });
+        
+        // 导航到下一首歌曲
+        function navigateToNextSong(shuffle) {
+            // 获取当前播放来源和相应的歌曲列表
+            const source = "{{ source }}"; // Current playing song's source
+            // const playlist_id = "{{ playlist_id if playlist_id is defined and playlist_id != None else '' }}"; // This is current song's playlist_id if any
+
+            let songListSelector = '';
+            if (source === 'playlist') {
+                songListSelector = '.in-player-playlist .menu li a';
+            } else { // source === 'search' or other
+                songListSelector = '.in-player-playlist .menu li a';
+            }
+            
+            const allSongLinks = document.querySelectorAll(songListSelector);
+            const songCount = allSongLinks.length;
+            
+            if (songCount === 0) return; // No songs in the list
+            if (songCount === 1 && (getPlayMode() === PLAY_MODE.REPEAT_ALL || getPlayMode() === PLAY_MODE.SHUFFLE)) {
+                // Only one song and in a mode that would try to change song, just replay it if possible
+                // or do nothing if audioPlayer.loop is already handling it for REPEAT_ONE
+                if (!audioPlayer.loop) { // if not single repeat mode
+                     audioPlayer.currentTime = 0;
+                     audioPlayer.play();
+                }
+                return;
+            }
+
+
+            let currentIndex = -1;
+            // Properties of the song currently loaded/playing on this page
+            const currentSongPlaying_ApiIndex = "{{ song_api_index }}";
+            const currentSongPlaying_Query = "{{ original_query }}"; 
+            const currentSongPlaying_Source = "{{ source }}";
+            const currentSongPlaying_PlaylistId = "{{ playlist_id if playlist_id is defined and playlist_id != None else '' }}";
+
+            for (let i = 0; i < allSongLinks.length; i++) {
+                const link = allSongLinks[i];
+                try {
+                    const url = new URL(link.href); // link.href is absolute URL
+                    const pathParts = url.pathname.split('/'); // e.g., ["", "song", "queryVal", "apiIndexVal"]
+                    
+                    // Path should be like /song/some_query_value/some_api_index
+                    if (pathParts.length > 2 && pathParts[pathParts.length - 3] === "song") { 
+                        const link_SongQuery = decodeURIComponent(pathParts[pathParts.length - 2]);
+                        const link_SongApiIndex = pathParts[pathParts.length - 1];
+                        const link_Source = url.searchParams.get('source');
+
+                        if (link_SongApiIndex === currentSongPlaying_ApiIndex && 
+                            link_SongQuery === currentSongPlaying_Query &&
+                            link_Source === currentSongPlaying_Source) {
+                            
+                            if (currentSongPlaying_Source === 'playlist') {
+                                const link_PlaylistId = url.searchParams.get('playlist_id');
+                                if (link_PlaylistId === currentSongPlaying_PlaylistId) {
+                                    currentIndex = i;
+                                    break; 
+                                }
+                            } else { // For 'search' or other sources not requiring playlist_id match
+                                currentIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing song link URL in navigateToNextSong:", link.href, e);
+                }
+            }
+            
+            let targetIndex;
+            
+            if (shuffle) {
+                // 随机选择一首，但不是当前播放的歌曲
+                do {
+                    targetIndex = Math.floor(Math.random() * songCount);
+                } while (targetIndex === currentIndex && songCount > 1);
+            } else {
+                // 顺序播放下一首
+                if (currentIndex === -1 || currentIndex >= songCount - 1) {
+                    // 当前歌曲不在列表中或是最后一首，从头开始
+                    targetIndex = 0;
+                } else {
+                    // 播放下一首
+                    targetIndex = currentIndex + 1;
+                }
+            }
+            
+            // 跳转到目标歌曲
+            if (targetIndex >= 0 && targetIndex < songCount) {
+                // 设置自动播放标志，使下一页面自动开始播放
+                sessionStorage.setItem('autoplay_next', 'true');
+                window.location.href = allSongLinks[targetIndex].href;
+            }
+        }
         
         // 初始化播放器
         initPlayer();

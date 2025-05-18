@@ -126,19 +126,123 @@ def search():
 @app.route('/song/<path:query>/<song_api_index>')
 def song_player(query, song_api_index):
     app.logger.info(f"请求播放歌曲: query={query}, api_index={song_api_index}")
+    
+    # 检查播放来源
+    source = request.args.get('source', 'search')  # 默认来源为搜索
+    playlist_id = request.args.get('playlist_id')
+    
     song_details = music_api_handler.get_song_details(query, song_api_index)
 
     if not song_details or not song_details.get('url'):
         flash('无法获取歌曲详情或播放链接，请重试。', 'error')
         return redirect(request.referrer or url_for('index'))
 
-    # 尝试获取搜索结果
+    # 获取播放列表（根据来源不同而不同）
+    playlist = None
+    playlist_songs = []
     search_results = []
-    try:
-        search_results = music_api_handler.search_music(query) or []
-    except Exception as e:
-        app.logger.warning(f"获取搜索结果失败: {e}")
-        # 可以继续，因为搜索结果不是必须的
+    
+    if source == 'playlist' and playlist_id:
+        # 从歌单播放
+        try:
+            playlist_id = int(playlist_id)
+            if 'user_id' in session:  # 用户已登录
+                playlist = database.get_playlist_by_id(playlist_id, session.get('user_id'))
+            
+            if playlist:
+                playlist_songs = database.get_songs_in_playlist(playlist_id)
+                app.logger.info(f"从歌单播放，获取到 {len(playlist_songs)} 首歌曲")
+            else:
+                # 如果未找到歌单或无权访问，回退到搜索结果
+                app.logger.warning(f"歌单 ID {playlist_id} 未找到或无权访问，回退到搜索结果")
+                source = 'search'
+        except (ValueError, TypeError) as e:
+            app.logger.error(f"处理歌单 ID 时出错: {e}")
+            source = 'search'
+    
+    # 如果来源是搜索或无法获取歌单，则获取搜索结果
+    if source == 'search' or not playlist_songs:
+        try:
+            search_results = music_api_handler.search_music(query) or []
+            app.logger.info(f"从搜索结果播放，获取到 {len(search_results)} 首歌曲")
+        except Exception as e:
+            app.logger.warning(f"获取搜索结果列表失败: {e}")
+
+    # 确定上一首和下一首歌曲
+    prev_song_nav = None
+    next_song_nav = None
+    current_song_list_index = -1
+    
+    # 根据来源使用不同的列表查找当前歌曲位置
+    song_list = playlist_songs if source == 'playlist' and playlist_songs else search_results
+    
+    app.logger.info(f"[DEBUG] song_player - Source: {source}")
+    app.logger.info(f"[DEBUG] song_player - URL song_api_index (original): {song_api_index}, type: {type(song_api_index)}")
+    app.logger.info(f"[DEBUG] song_player - Song list length: {len(song_list)}")
+    if song_list:
+        app.logger.info(f"[DEBUG] song_player - First item in song_list (sample): {song_list[0]}")
+
+    if song_list:
+        try:
+            current_url_song_api_index_str = str(song_api_index)
+            app.logger.info(f"[DEBUG] song_player - URL song_api_index (as string for comparison): {current_url_song_api_index_str}")
+
+            for i, song in enumerate(song_list):
+                if source == 'playlist':
+                    # sqlite3.Row objects are accessed by index/key
+                    song_item_api_index_original = song['song_api_index'] 
+                else:
+                    # search_results are expected to be dicts and support .get()
+                    song_item_api_index_original = song.get('index')
+                
+                song_item_api_index_str = str(song_item_api_index_original)
+                
+                app.logger.info(f"[DEBUG] song_player - Comparing: List item index {i}, song_item_api_index (original): {song_item_api_index_original}, type: {type(song_item_api_index_original)}, as string: {song_item_api_index_str} WITH {current_url_song_api_index_str}")
+
+                if song_item_api_index_str == current_url_song_api_index_str:
+                    current_song_list_index = i
+                    app.logger.info(f"[DEBUG] song_player - Match found at list index: {current_song_list_index}")
+                    break
+            
+            if current_song_list_index == -1:
+                app.logger.warning("[DEBUG] song_player - No match found for current song in the list!")
+
+            if current_song_list_index != -1:
+                if current_song_list_index > 0:
+                    prev_song = song_list[current_song_list_index - 1]
+                    if source == 'playlist':
+                        prev_song_nav = {
+                            'query': prev_song['song_query'], 
+                            'song_api_index': prev_song['song_api_index'],
+                            'source': source,
+                            'playlist_id': playlist_id
+                        }
+                    else: # source == 'search'
+                        prev_song_nav = {
+                            'query': query, 
+                            'song_api_index': prev_song.get('index'),
+                            'source': source,
+                            'playlist_id': None
+                        }
+                
+                if current_song_list_index < len(song_list) - 1:
+                    next_song = song_list[current_song_list_index + 1]
+                    if source == 'playlist':
+                        next_song_nav = {
+                            'query': next_song['song_query'], 
+                            'song_api_index': next_song['song_api_index'],
+                            'source': source,
+                            'playlist_id': playlist_id
+                        }
+                    else: # source == 'search'
+                        next_song_nav = {
+                            'query': query, 
+                            'song_api_index': next_song.get('index'),
+                            'source': source,
+                            'playlist_id': None
+                        }
+        except Exception as e:
+            app.logger.error(f"确定上一首/下一首歌曲时出错: {e}")
 
     # 添加到播放历史记录
     if song_details and 'url' in song_details:
@@ -199,10 +303,16 @@ def song_player(query, song_api_index):
         'song_player.html',
         song_details=song_details,
         parsed_lyrics=parsed_lyrics,
-        original_query=query, # Pass original query for download link
-        song_api_index=song_api_index, # Pass api_index for download link
-        search_results=search_results, # 传递搜索结果到模板
-        user_playlists=user_playlists # 传递用户歌单列表
+        original_query=query, 
+        song_api_index=song_api_index, 
+        search_results=search_results, 
+        user_playlists=user_playlists,
+        prev_song_nav=prev_song_nav,
+        next_song_nav=next_song_nav,
+        source=source,
+        playlist=playlist,
+        playlist_songs=playlist_songs if source == 'playlist' else None,
+        playlist_id=playlist_id if source == 'playlist' else None
     )
 
 @app.route('/download/<path:query>/<song_api_index>')
