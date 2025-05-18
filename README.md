@@ -24,7 +24,8 @@
 ## 技术栈
 
 - **后端**: Python, Flask
-- **数据库**: SQLite
+- **数据库**: MySQL (之前是 SQLite)
+- **数据库驱动**: mysql-connector-python
 - **前端**: HTML, JavaScript
 - **CSS框架**: DaisyUI, TailwindCSS
 - **音乐处理**: mutagen (用于 MP3 元数据)
@@ -49,22 +50,27 @@ musicdown/
 │   ├── playlist_detail.html      # 特定歌单详情页
 │   └── login.html                # 登录页
 ├── app.py                        # Flask 主应用文件 (路由、视图函数)
-├── database.py                   # 数据库初始化和操作函数
+├── database.py                   # 数据库初始化和操作函数 (MySQL 版本)
 ├── music_api_handler.py          # 处理音乐 API 交互、歌曲下载和元数据处理
-├── musicapp.db                   # SQLite 数据库文件
 ├── requirements.txt              # Python 依赖包
 └── README.md                     # 本文档
 ```
+(注意: `musicapp.db` 文件已移除，因为数据库现在是 MySQL。)
 
 ## 安装与运行
 
-1.  **克隆仓库** (如果项目在版本控制中):
+1.  **先决条件**:
+    *   **Python 3.x**
+    *   **MySQL 服务器**: 确保您的系统上已安装并正在运行 MySQL 服务器。
+    *   **Git** (可选, 用于克隆仓库)
+
+2.  **克隆仓库** (如果项目在版本控制中):
     ```bash
     git clone <repository_url>
     cd musicdown
     ```
 
-2.  **创建并激活虚拟环境**:
+3.  **创建并激活虚拟环境**:
     -   Windows:
         ```bash
         python -m venv venv
@@ -76,12 +82,38 @@ musicdown/
         source venv/bin/activate
         ```
 
-3.  **安装依赖**:
+4.  **配置数据库**:
+    *   **创建数据库**: 在您的 MySQL 服务器中创建一个数据库。例如，名为 `musicdown_db`。
+        ```sql
+        CREATE DATABASE IF NOT EXISTS musicdown_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        ```
+    *   **创建用户并授权 (推荐)**: 创建一个专用的 MySQL 用户，并授予其对上述数据库的权限。例如：
+        ```sql
+        CREATE USER 'musicdown_user'@'localhost' IDENTIFIED BY 'your_strong_password';
+        GRANT ALL PRIVILEGES ON musicdown_db.* TO 'musicdown_user'@'localhost';
+        FLUSH PRIVILEGES;
+        ```
+        (请将 `'your_strong_password'` 替换为您选择的强密码。)
+    *   **更新 `database.py`**: 打开 `musicdown/database.py` 文件，修改 `MYSQL_CONFIG` 字典中的数据库连接信息，以匹配您的 MySQL 设置：
+        ```python
+        MYSQL_CONFIG = {
+            'host': 'localhost',  # MySQL 服务器地址
+            'user': 'musicdown_user', # 您创建的 MySQL 用户名
+            'password': 'your_strong_password', # 您的 MySQL 用户密码
+            'database': 'musicdown_db', # 您创建的数据库名
+            'charset': 'utf8mb4'
+        }
+        ```
+        *(在之前的步骤中，我们使用了您提供的特定凭据。这里作为通用指南说明。)*
+
+5.  **安装依赖**:
     ```bash
     pip install -r requirements.txt
     ```
+    (这将安装 Flask, requests, mutagen, 和 `mysql-connector-python` 等。)
 
-4.  **运行应用**:
+6.  **运行应用与初始化数据库**:
+    当您首次运行应用时，`database.init_db()` 函数会被调用，它会自动在您配置的 MySQL 数据库中创建所需的表。
     `app.py` 中 `if __name__ == '__main__':` 块内默认使用 `app.run(debug=True, host='0.0.0.0', port=5001)`。
     可以直接运行:
     ```bash
@@ -92,9 +124,9 @@ musicdown/
     flask run --host=0.0.0.0 --port=5001 
     ```
     (注意: 如果使用 `flask run`，它可能默认使用 5000 端口，除非通过环境变量或参数指定。直接运行 `python app.py` 会使用代码中指定的 5001 端口。)
+    **监控应用启动时的日志输出，确保数据库表成功创建，并且没有连接错误。**
 
-
-5.  **访问应用**:
+7.  **访问应用**:
     在浏览器中打开 `http://localhost:5001` (或您配置的主机和端口)。
 
 ## 关键模块和功能说明
@@ -114,7 +146,7 @@ musicdown/
     -   `/my_playlists`, `/playlist/create`, `/playlist/<id>`, `/playlist/delete/<id>`: 用户歌单管理。
     -   `/playlist/<playlist_id>/add_song`, `/playlist/<playlist_id>/remove_song/<song_id>`: 向歌单添加/移除歌曲。
 -   **会话管理**: 使用 Flask `session` 存储用户信息、播放历史、最近搜索。
--   **数据库交互**: 调用 `database.py` 中的函数进行数据存取。
+-   **数据库交互**: 调用 `database.py` 中的函数进行数据存取 (MySQL)。
 -   **API交互**: 调用 `music_api_handler.py` 中的函数获取音乐数据。
 -   **辅助函数**: 如 `@login_required` 装饰器保护需要登录的路由。
 -   **上下文处理器**: 使用 `@app.context_processor` 向所有模板注入全局变量（例如 `current_year`）。
@@ -131,9 +163,9 @@ musicdown/
 -   `embed_mp3_metadata(mp3_path, title, artist, album, cover_image_path)`: 将元数据和封面嵌入到 MP3 文件中。
 
 ### `database.py`
-负责所有数据库相关的操作。
--   `init_db()`: 初始化数据库，创建 `users`, `playlists`, `playlist_songs` 表（如果它们不存在）。
--   `get_db_connection()`: 获取 SQLite 数据库连接。
+负责所有与 MySQL 数据库相关的操作。
+-   `init_db()`: 初始化数据库，连接到 MySQL 并创建 `users`, `playlists`, `playlist_songs` 表（如果它们不存在）。
+-   `get_db_connection()`: 获取 MySQL 数据库连接。
 -   **用户管理函数**:
     -   `create_user(username)`: 创建新用户。
     -   `get_user_by_username(username)`: 通过用户名获取用户信息。
@@ -142,11 +174,11 @@ musicdown/
     -   `create_playlist(user_id, name)`: 为用户创建新歌单。
     -   `get_playlists_by_user_id(user_id)`: 获取用户的所有歌单。
     -   `get_playlist_by_id(playlist_id, user_id=None)`: 获取特定歌单信息，可选用户ID验证所有权。
-    -   `delete_playlist_by_id(playlist_id, user_id)`: 删除用户歌单（同时删除关联歌曲）。
+    -   `delete_playlist_by_id(playlist_id, user_id)`: 删除用户歌单（同时通过外键级联删除关联歌曲）。
 -   **歌单歌曲管理函数**:
     -   `add_song_to_playlist(playlist_id, song_api_index, song_query, title, singer, cover)`: 向歌单添加歌曲，处理重复。返回 `(True/False, "消息")`。
     -   `remove_song_from_playlist(playlist_song_id, user_id)`: 从歌单移除歌曲，验证用户权限。
-    -   `get_songs_in_playlist(playlist_id)`: 获取特定歌单中的所有歌曲。
+    -   `get_songs_in_playlist(playlist_id)`: 获取特定歌单中的所有歌曲 (按添加顺序升序排列)。
 
 ## 未来可改进方向
 
@@ -158,6 +190,7 @@ musicdown/
 - **错误处理和日志**: 进一步完善全局错误处理和更详细的日志记录。
 - **前端组件化**: 如果项目规模扩大，可以考虑使用 Vue.js 或 React 等前端框架。
 - **国际化与本地化**: 支持多语言界面。
+- **配置管理**: 将数据库凭据等敏感信息从代码中分离到环境变量或配置文件。
 
 ### `templates/playlist_detail.html`
 -   显示特定歌单的详细信息和歌曲列表。
