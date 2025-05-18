@@ -318,8 +318,8 @@ def get_songs_in_playlist(playlist_id):
         cursor.execute("""
             SELECT * FROM playlist_songs 
             WHERE playlist_id = %s 
-            ORDER BY added_at ASC 
-        """, (playlist_id,)) # Changed to ASC to play in order added
+            ORDER BY added_at DESC 
+        """, (playlist_id,)) # Changed to DESC so newest songs appear first
         songs = cursor.fetchall()
         return songs
     except mysql.connector.Error as err:
